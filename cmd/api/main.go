@@ -24,8 +24,10 @@ func main() {
 
 	db, err := repository.NewPostgresDB(cfg)
 	if err != nil {
+		slog.Error("Error with db connection", "error", err.Error())
 		return
 	}
+	defer db.Close()
 
 	courseRepo := repository.NewPsgCourseRepo(db)
 	courseService := service.NewCourseService(courseRepo)
@@ -33,6 +35,10 @@ func main() {
 	h := handler.NewHandler(courseService)
 
 	router, err := h.InitRoutes()
+	if err != nil {
+		slog.Error("Failed to initialize routes", "error", err.Error())
+		os.Exit(1)
+	}
 
 	srv := server.New(cfg.Port, router)
 	err = srv.Run()

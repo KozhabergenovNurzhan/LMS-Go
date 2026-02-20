@@ -11,39 +11,55 @@ import (
 	"github.com/KozhabergenovNurzhan/GoProj1/internal/repository"
 	"github.com/KozhabergenovNurzhan/GoProj1/internal/server"
 	"github.com/KozhabergenovNurzhan/GoProj1/internal/service"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
+
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err.Error())
+		log.Fatalf("Failed to load config: %s", err.Error())
 	}
 
 	slogger := logger.New(cfg.LogLevel)
 	slog.SetDefault(slogger)
 
-	db, err := repository.NewPostgresDB(cfg)
+	router, err := buildApp(cfg)
 	if err != nil {
-		slog.Error("Error with db connection", "error", err.Error())
-		return
-	}
-	defer db.Close()
-
-	courseRepo := repository.NewPsgCourseRepo(db)
-	courseService := service.NewCourseService(courseRepo)
-
-	h := handler.NewHandler(courseService)
-
-	router, err := h.InitRoutes()
-	if err != nil {
-		slog.Error("Failed to initialize routes", "error", err.Error())
+		slog.Error("failed to build app", "error", err.Error())
 		os.Exit(1)
 	}
 
-	srv := server.New(cfg.Port, router)
+	srv := server.New(router, cfg.Port)
 	err = srv.Run()
 	if err != nil {
 		slog.Error("failed to start server", "error", err.Error())
 		os.Exit(1)
 	}
+
+	slog.Info("Server started", "port", cfg.Port)
+}
+
+func buildApp(cfg *config.Config) (*gin.Engine, error) {
+	// создаем db - с его помощью будем делать запросы в БД Postgres
+	db, err := repository.NewPostgresDB(cfg)
+	if err != nil {
+		slog.Error("Error with DB connection")
+		return nil, err
+	}
+
+	// Тут только создаем репозитории
+	courseRepo := repository.NewPsqCourseRepo(db)
+	lessonRepo := repository.NewPsgLessonRepo(db)
+
+	// Cобрали все сервисе в одним файле
+	services := &service.Services{
+		Course: service.NewCourseService(courseRepo, lessonRepo),
+		Lesson: service.NewLessonService(lessonRepo, courseRepo),
+	}
+
+	h := handler.NewHandler(services)
+	router, err := h.InitRoutes()
+
+	return router, nil
 }

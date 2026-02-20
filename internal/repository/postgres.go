@@ -6,12 +6,14 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/KozhabergenovNurzhan/GoProj1/internal/config"
+	"github.com/azicussdu/GoProj2/internal/config"
+
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 )
 
 func NewPostgresDB(cfg *config.Config) (*sqlx.DB, error) {
+
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Database.Host,
 		cfg.Database.Port,
@@ -21,21 +23,18 @@ func NewPostgresDB(cfg *config.Config) (*sqlx.DB, error) {
 		cfg.Database.SSLMode,
 	)
 
-	db, err := sqlx.Open("pgx", connStr)
-	if err != nil {
-		return nil, fmt.Errorf("sqlx.Open() error: %w", err)
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := db.PingContext(ctx); err != nil {
-		err2 := db.Close()
-		if err2 != nil {
-			return nil, err
-		}
-		return nil, fmt.Errorf("ping db: %w", err)
+	db, err := sqlx.ConnectContext(ctx, "pgx", connStr)
+	if err != nil {
+		return nil, fmt.Errorf("connect db error: %w", err)
 	}
+
+	// 3. Настройка пула соединений
+	db.SetMaxOpenConns(25)                  // максимум открытых соединений
+	db.SetMaxIdleConns(10)                  // максимум простаивающих
+	db.SetConnMaxLifetime(30 * time.Minute) // время жизни соединения
 
 	slog.Info("PostgreSQL connected successfully")
 

@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 )
-
+		
 func New(level string) *slog.Logger {
 	logger := slog.New(
 		slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{

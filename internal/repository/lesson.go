@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/azicussdu/GoProj2/internal/models"
-	"github.com/azicussdu/GoProj2/internal/pkg/utils"
+	"github.com/KozhabergenovNurzhan/GoProj1/internal/models"
+	"github.com/KozhabergenovNurzhan/GoProj1/internal/pkg/utils"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jmoiron/sqlx"
 )

@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/azicussdu/GoProj2/internal/config"
+	"github.com/KozhabergenovNurzhan/GoProj1/internal/config"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"

@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/azicussdu/GoProj2/internal/models"
-	"github.com/azicussdu/GoProj2/internal/repository"
+	"github.com/KozhabergenovNurzhan/GoProj1/internal/models"
+	"github.com/KozhabergenovNurzhan/GoProj1/internal/repository"
 )
 
 type CourseService struct {

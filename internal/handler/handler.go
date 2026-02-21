@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/KozhabergenovNurzhan/GoProj1"
+	"github.com/KozhabergenovNurzhan/GoProj1/internal/service"
 	"github.com/gin-gonic/gin"
 )
 

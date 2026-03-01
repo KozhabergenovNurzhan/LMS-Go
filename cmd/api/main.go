@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/KozhabergenovNurzhan/GoProj1/internal/auth"
 	"github.com/KozhabergenovNurzhan/GoProj1/internal/config"
 	"github.com/KozhabergenovNurzhan/GoProj1/internal/handler"
 	"github.com/KozhabergenovNurzhan/GoProj1/internal/pkg/logger"
@@ -51,11 +52,15 @@ func buildApp(cfg *config.Config) (*gin.Engine, error) {
 	// Тут только создаем репозитории
 	courseRepo := repository.NewPsqCourseRepo(db)
 	lessonRepo := repository.NewPsgLessonRepo(db)
+	userRepo := repository.NewPsgUserRepo(db)
+
+	jwtManager := auth.NewJWTManager(cfg.JWT.Secret, cfg.JWT.AccessTTL, cfg.JWT.RefreshTTL, cfg.JWT.Issuer)
 
 	// Cобрали все сервисе в одним файле
 	services := &service.Services{
 		Course: service.NewCourseService(courseRepo, lessonRepo),
 		Lesson: service.NewLessonService(lessonRepo, courseRepo),
+		Auth:   service.NewAuthService(userRepo, jwtManager),
 	}
 
 	h := handler.NewHandler(services)

@@ -136,9 +136,10 @@ func (pcr *PsgCourseRepo) Create(input models.CreateCourse) (int, error) {
 
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
-			if pgErr.Code == "23503" { // no teacher_id
+			switch pgErr.Code {
+			case "23503":
 				return 0, models.ErrTeacherNotFound
-			} else if pgErr.Code == "23505" { // unique constraint
+			case "23505":
 				return 0, models.ErrSlugAlreadyExists
 			}
 		}

@@ -2,38 +2,41 @@ package models
 
 import "time"
 
+type UserRole string
+
 const (
-	RoleAdmin   = "admin"
-	RoleTeacher = "teacher"
-	RoleStudent = "student"
+	RoleAdmin   UserRole = "admin"
+	RoleTeacher UserRole = "teacher"
+	RoleStudent UserRole = "student"
 )
 
 func IsValidRole(role string) bool {
-	switch role {
+	switch UserRole(role) {
 	case RoleAdmin, RoleTeacher, RoleStudent:
 		return true
-	default:
-		return false
 	}
+	return false
 }
 
 type User struct {
-	ID           int       `db:"id" json:"id"`
-	FullName     string    `db:"full_name" json:"full_name"`
-	Email        string    `db:"email" json:"email"`
-	PasswordHash string    `db:"password_hash" json:"-"` // This prevents password hash from being returned in API responses.
-	Role         string    `db:"role" json:"role"`
-	IsActive     bool      `db:"is_active" json:"is_active"`
-	CreatedAt    time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
+	ID           int       `json:"type:id"`
+	FullName     string    `gorm:"type:varchar(255);not null" json:"full_name"`
+	Email        string    `gorm:"type:varchar(255);unique;not null" json:"email"`
+	PasswordHash string    `gorm:"not null" json:"-"`
+	Role         UserRole  `gorm:"type:user_role;default:'student';not null"`
+	IsActive     bool      `gorm:"default:true;not null" json:"is_active"`
+	CreatedAt    time.Time `gorm:"not null" json:"created_at"`
+	UpdatedAt    time.Time `gorm:"not null" json:"updated_at"`
+}
+
+func (User) TableName() string {
+	return "users"
 }
 
 type CreateUser struct {
-	FullName     string    `db:"full_name" json:"full_name" binding:"required"`
-	Email        string    `db:"email" json:"email" binding:"required"`
-	PasswordHash string    `db:"password_hash" json:"-"`
-	CreatedAt    time.Time `db:"created_at"`
-	UpdatedAt    time.Time `db:"updated_at"`
+	FullName     string `json:"full_name" binding:"required"`
+	Email        string `json:"email" binding:"required"`
+	PasswordHash string `json:"-"`
 }
 
 type RegisterUser struct {

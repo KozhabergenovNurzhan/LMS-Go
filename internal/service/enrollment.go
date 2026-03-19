@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"strings"
 
 	"github.com/KozhabergenovNurzhan/GoProj1/internal/models"
 	"github.com/KozhabergenovNurzhan/GoProj1/internal/repository"
@@ -25,8 +24,7 @@ func (s *EnrollmentService) JoinCourse(ctx context.Context, user models.User, co
 		return 0, models.ErrUserNotFound
 	}
 
-	role := strings.TrimSpace(strings.ToLower(user.Role))
-	if role != models.RoleStudent {
+	if user.Role != models.RoleStudent {
 		return 0, models.ErrOnlyStudentsCanEnroll
 	}
 
@@ -58,8 +56,7 @@ func (s *EnrollmentService) LeaveCourse(ctx context.Context, user models.User, c
 		return models.ErrUserNotFound
 	}
 
-	role := strings.TrimSpace(strings.ToLower(user.Role))
-	if role != models.RoleStudent {
+	if user.Role != models.RoleStudent {
 		return models.ErrOnlyStudentsCanEnroll
 	}
 
@@ -70,13 +67,12 @@ func (s *EnrollmentService) LeaveCourse(ctx context.Context, user models.User, c
 	return s.repo.DeleteByUserAndCourse(ctx, user.ID, courseID)
 }
 
-func (s *EnrollmentService) GetMyCourses(ctx context.Context, user models.User) ([]models.MyCourse, error) {
+func (s *EnrollmentService) GetMyCourses(ctx context.Context, user models.User) ([]models.Enrollment, error) {
 	if user.ID <= 0 {
 		return nil, models.ErrUserNotFound
 	}
 
-	role := strings.TrimSpace(strings.ToLower(user.Role))
-	if role != models.RoleStudent {
+	if user.Role != models.RoleStudent {
 		return nil, models.ErrOnlyStudentsCanEnroll
 	}
 

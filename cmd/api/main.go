@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/KozhabergenovNurzhan/GoProj1/internal/auth"
 	"github.com/KozhabergenovNurzhan/GoProj1/internal/config"
@@ -42,14 +44,13 @@ func main() {
 }
 
 func buildApp(cfg *config.Config) (*gin.Engine, error) {
-	// создаем db - с его помощью будем делать запросы в БД Postgres
+	fmt.Println(time.Now())
 	db, err := repository.NewPostgresDB(cfg)
 	if err != nil {
-		slog.Error("Error with DB connection")
+		slog.Error("error with DB connection")
 		return nil, err
 	}
 
-	// Тут только создаем репозитории
 	courseRepo := repository.NewPsqCourseRepo(db)
 	lessonRepo := repository.NewPsgLessonRepo(db)
 	enrollmentRepo := repository.NewPsgEnrollmentRepo(db)
@@ -57,10 +58,9 @@ func buildApp(cfg *config.Config) (*gin.Engine, error) {
 
 	jwtManager := auth.NewJWTManager(cfg.JWT.Secret, cfg.JWT.AccessTTL, cfg.JWT.RefreshTTL, cfg.JWT.Issuer)
 
-	// Cобрали все сервисе в одним файле
 	services := &service.Services{
 		Course:     service.NewCourseService(courseRepo, lessonRepo, enrollmentRepo, db),
-		Lesson:     service.NewLessonService(lessonRepo, courseRepo, db),
+		Lesson:     service.NewLessonService(lessonRepo, courseRepo),
 		Enrollment: service.NewEnrollmentService(enrollmentRepo, courseRepo),
 		Auth:       service.NewAuthService(userRepo, jwtManager),
 	}

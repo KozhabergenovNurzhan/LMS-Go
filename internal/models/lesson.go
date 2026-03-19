@@ -4,34 +4,39 @@ import (
 	"errors"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type Lesson struct {
-	ID        int     `db:"id" json:"id"`
-	CourseID  int     `db:"course_id" json:"course_id"`
-	Title     string  `db:"title" json:"title"`
-	Content   *string `db:"content" json:"content,omitempty"`
-	VideoURL  *string `db:"video_url" json:"video_url,omitempty"`
-	Duration  int     `db:"duration" json:"duration"`
-	Position  int     `db:"position" json:"position"`
-	IsPreview bool    `db:"is_preview" json:"is_preview"`
+	ID int `json:"id"`
 
-	CreatedAt time.Time  `db:"created_at" json:"created_at"`
-	UpdatedAt time.Time  `db:"updated_at" json:"updated_at"`
-	DeletedAt *time.Time `db:"deleted_at" json:"deleted_at,omitempty"`
+	CourseID int    `gorm:"not null;index" json:"course_id"`
+	Course   Course `gorm:"foreignKey:CourseID;constraint:OnDelete:CASCADE"`
+
+	Title     string         `gorm:"type:varchar(255);not null" json:"title"`
+	Content   *string        `json:"content,omitempty"`
+	VideoURL  *string        `json:"video_url,omitempty"`
+	Duration  int            `gorm:"default:0;not null" json:"duration"`
+	Position  int            `gorm:"default:0;not null" json:"position"`
+	IsPreview bool           `gorm:"default:false;not null" json:"is_preview"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+}
+
+func (Lesson) TableName() string {
+	return "lessons"
 }
 
 type CreateLesson struct {
-	CourseID  int     `db:"course_id" json:"course_id" binding:"required"`
-	Title     string  `db:"title" json:"title" binding:"required"`
-	Content   *string `db:"content" json:"content"`
-	VideoURL  *string `db:"video_url" json:"video_url"`
-	Duration  int     `db:"duration" json:"duration"`
-	Position  int     `db:"position" json:"position"`
-	IsPreview bool    `db:"is_preview" json:"is_preview"`
-
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	CourseID  int     `json:"course_id" binding:"required"`
+	Title     string  `json:"title" binding:"required"`
+	Content   *string `json:"content"`
+	VideoURL  *string `json:"video_url"`
+	Duration  int     `json:"duration"`
+	Position  int     `json:"position"`
+	IsPreview bool    `json:"is_preview"`
 }
 
 func (c *CreateLesson) Validate() error {
@@ -50,11 +55,11 @@ func (c *CreateLesson) Validate() error {
 }
 
 type UpdateLesson struct {
-	CourseID  *int    `db:"course_id" json:"course_id"`
-	Title     *string `db:"title" json:"title"`
-	Content   *string `db:"content" json:"content"`
-	VideoURL  *string `db:"video_url" json:"video_url"`
-	Duration  *int    `db:"duration" json:"duration"`
-	Position  *int    `db:"position" json:"position"`
-	IsPreview *bool   `db:"is_preview" json:"is_preview"`
+	CourseID  *int    `json:"course_id"`
+	Title     *string `json:"title"`
+	Content   *string `json:"content"`
+	VideoURL  *string `json:"video_url"`
+	Duration  *int    `json:"duration"`
+	Position  *int    `json:"position"`
+	IsPreview *bool   `json:"is_preview"`
 }

@@ -17,6 +17,7 @@ type CourseRepo interface {
 	GetAll() ([]models.Course, error)
 	GetByID(ctx context.Context, id int) (models.Course, error)
 	DeleteByID(id int) error
+	DeleteByIDTx(ctx context.Context, tx *sqlx.Tx, id int) error
 	Create(input models.CreateCourse) (int, error)
 	Update(ctx context.Context, id int, input models.UpdateCourse) (int, error)
 }
@@ -136,10 +137,9 @@ func (pcr *PsgCourseRepo) Create(input models.CreateCourse) (int, error) {
 
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
-			switch pgErr.Code {
-			case "23503":
+			if pgErr.Code == "23503" { // no teacher_id
 				return 0, models.ErrTeacherNotFound
-			case "23505":
+			} else if pgErr.Code == "23505" { // unique constraint
 				return 0, models.ErrSlugAlreadyExists
 			}
 		}
@@ -160,6 +160,32 @@ func (pcr *PsgCourseRepo) DeleteByID(id int) error {
 	`
 
 	result, err := pcr.db.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("delete course error: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return models.ErrCourseNotFound
+	}
+
+	return nil
+}
+
+func (pcr *PsgCourseRepo) DeleteByIDTx(ctx context.Context, tx *sqlx.Tx, id int) error {
+	query := `
+		UPDATE courses
+		SET deleted_at = NOW(),
+		    updated_at = NOW()
+		WHERE id = $1
+		AND deleted_at IS NULL
+	`
+
+	result, err := tx.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("delete course error: %w", err)
 	}
